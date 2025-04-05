@@ -1,28 +1,63 @@
 body {
-    font-family: Arial, sans-serif;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f4f4f4;
-    margin: 0;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f4f4f4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-#content {
-    text-align: center;
+.device-id-box {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: #222;
+  color: white;
+  padding: 8px;
+  border-radius: 5px;
+}
+
+.container {
+  margin-top: 70px;
+  width: 90%;
+  max-width: 800px;
+  text-align: center;
+}
+
+input[type="text"] {
+  width: 70%;
+  padding: 10px;
+  margin: 10px 0;
 }
 
 button {
-    padding: 10px 20px;
-    cursor: pointer;
-    font-size: 16px;
+  padding: 10px 15px;
+  cursor: pointer;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
 }
 
-#likeSection {
-    margin-top: 20px;
+.video-container iframe {
+  width: 100%;
+  height: 400px;
+  margin-top: 10px;
 }
 
-#likeMessage {
-    color: green;
-    font-size: 18px;
+.chat-box {
+  margin-top: 20px;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  text-align: left;
+}
+
+#messages {
+  height: 150px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 5px;
+  margin-bottom: 10px;
 }
