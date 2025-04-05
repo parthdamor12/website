@@ -11,25 +11,32 @@ let messages = sessionStorage.getItem('chatMessages') ? JSON.parse(sessionStorag
 let peer = new Peer(userId, { host: 'peerjs-server.herokuapp.com', secure: true, port: 443 });
 let connections = {};
 let selectedFriendId = null;
+let onlineUsers = [];
 
 // Update username
 document.getElementById('userName').addEventListener('change', (e) => {
     userName = e.target.value || 'Unknown';
-    updateFriendsList();
+    broadcastPresence(); // Announce name change
 });
 
 // When peer is ready
 peer.on('open', () => {
     console.log('Peer ID:', userId);
-    updateFriendsList();
+    broadcastPresence(); // Announce yourself to others
 });
 
 // Handle incoming connections
 peer.on('connection', (conn) => {
     connections[conn.peer] = conn;
     conn.on('data', (data) => {
-        messages.push({ sender: conn.metadata.name || 'Unknown', text: data });
-        renderMessages();
+        if (data.type === 'presence') {
+            onlineUsers = onlineUsers.filter(u => u.id !== conn.peer);
+            onlineUsers.push({ id: conn.peer, name: data.name });
+            updateFriendsList();
+        } else {
+            messages.push({ sender: conn.metadata.name || 'Unknown', text: data });
+            renderMessages();
+        }
     });
     updateFriendsList();
 });
@@ -49,11 +56,10 @@ function renderMessages() {
 function updateFriendsList() {
     const friendsList = document.getElementById('friendsList');
     friendsList.innerHTML = '';
-    Object.keys(connections).forEach(friendId => {
+    onlineUsers.forEach(user => {
         const li = document.createElement('li');
-        const friendName = connections[friendId].metadata?.name || 'Unknown';
-        li.textContent = `${friendName} (${friendId})`;
-        li.onclick = () => selectFriend(friendId);
+        li.textContent = `${user.name} (${user.id})`;
+        li.onclick = () => selectFriend(user.id);
         friendsList.appendChild(li);
     });
 }
@@ -61,7 +67,10 @@ function updateFriendsList() {
 // Select a friend to chat with
 function selectFriend(friendId) {
     selectedFriendId = friendId;
-    document.getElementById('chatWith').textContent = connections[friendId].metadata?.name || 'Unknown';
+    document.getElementById('chatWith').textContent = onlineUsers.find(u => u.id === friendId)?.name || 'Unknown';
+    if (!connections[friendId]) {
+        connectToFriend(friendId);
+    }
     renderMessages();
 }
 
@@ -72,13 +81,29 @@ function connectToFriend(friendId) {
         connections[friendId] = conn;
         conn.on('open', () => {
             console.log('Connected to', friendId);
+            conn.send({ type: 'presence', name: userName }); // Send presence info
             updateFriendsList();
         });
         conn.on('data', (data) => {
-            messages.push({ sender: conn.metadata.name || 'Unknown', text: data });
-            renderMessages();
+            if (data.type === 'presence') {
+                onlineUsers = onlineUsers.filter(u => u.id !== friendId);
+                onlineUsers.push({ id: friendId, name: data.name });
+                updateFriendsList();
+            } else {
+                messages.push({ sender: conn.metadata.name || 'Unknown', text: data });
+                renderMessages();
+            }
         });
     }
+}
+
+// Broadcast presence to all known peers
+function broadcastPresence() {
+    Object.values(connections).forEach(conn => {
+        if (conn.open) {
+            conn.send({ type: 'presence', name: userName });
+        }
+    });
 }
 
 // Send message
@@ -91,22 +116,16 @@ function sendMessage() {
         messages.push({ sender: userName, text: message });
         renderMessages();
         input.value = '';
-    } else if (message) {
-        // If no friend selected, prompt to connect
-        const friendId = prompt('Enter the ID of the person you want to chat with:');
-        if (friendId && friendId !== userId) {
-            connectToFriend(friendId);
-            setTimeout(() => {
-                if (connections[friendId]) {
-                    connections[friendId].send(message);
-                    messages.push({ sender: userName, text: message });
-                    renderMessages();
-                    input.value = '';
-                }
-            }, 1000); // Wait for connection
-        }
     }
 }
 
 // Initial render
 renderMessages();
+
+// Simulate initial connection (you’d normally share IDs manually)
+setTimeout(() => {
+    const friendId = prompt('Enter a friend’s ID to start (or leave blank to wait):');
+    if (friendId && friendId !== userId) {
+        connectToFriend(friendId);
+    }
+}, 1000);
