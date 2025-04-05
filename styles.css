@@ -1,50 +1,49 @@
 body {
     font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
     margin: 0;
-    padding: 20px;
-    background-color: #f0f0f0;
+    background-color: #f4f4f4;
 }
 
 .container {
-    max-width: 600px;
-    margin: auto;
+    width: 400px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
 }
 
-#userInfo, #friendsBox, #chatBox {
-    background: white;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+h1 {
+    text-align: center;
 }
 
-#friendsList {
-    list-style: none;
-    padding: 0;
-}
-
-#friendsList li {
-    padding: 5px;
-}
-
-#messages {
-    height: 300px;
+.chatbox {
+    max-height: 300px;
     overflow-y: auto;
-    border: 1px solid #ccc;
+    margin-bottom: 20px;
     padding: 10px;
-    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    background-color: #fafafa;
+    border-radius: 5px;
 }
 
-#messageInput {
-    width: 70%;
-    padding: 5px;
+.controls {
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
 }
 
 button {
-    padding: 5px 10px;
+    padding: 10px 20px;
+    cursor: pointer;
 }
 
-#shareLink {
-    color: #007bff;
-    text-decoration: none;
+input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
 }
