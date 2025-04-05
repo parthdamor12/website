@@ -34,3 +34,8 @@ body {
 button {
     padding: 5px 10px;
 }
+
+#shareLink {
+    color: #007bff;
+    text-decoration: none;
+}
