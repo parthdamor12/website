@@ -1,6 +1,9 @@
-// Generate a simple unique ID based on device data
-const deviceData = navigator.userAgent;
-const userId = btoa(deviceData).substring(0, 8); // Simple hash-like ID from device
+// Generate or retrieve a fixed unique ID for the device
+let userId = localStorage.getItem('userId');
+if (!userId) {
+    userId = crypto.randomUUID ? crypto.randomUUID().substring(0, 8) : `${Date.now()}${Math.random().toString(36).substring(2, 5)}`;
+    localStorage.setItem('userId', userId); // Store it permanently in localStorage
+}
 document.getElementById('userId').textContent = userId;
 
 let userName = 'Unknown';
@@ -14,11 +17,11 @@ const fakeUsers = [
 
 // Random responses for simulation
 const responses = [
-    "Hey, what’s up?",
-    "Cool, tell me more!",
-    "Haha, nice one!",
-    "What’s on your mind?",
-    "Good to chat!"
+    "Hey, kya chal raha hai?",
+    "Bhai, aur bata!",
+    "Haha, mast hai!",
+    "Kya soch raha hai?",
+    "Baat karna achha lag raha hai!"
 ];
 
 // Update username
