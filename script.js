@@ -1,121 +1,73 @@
-<script>
-const allowedDevices = [
-    "f728d21ad0b3ff...", // your hashed device ID here
-];
+// Generate a temporary ID (random for simplicity, could use device info)
+const userId = Math.random().toString(36).substring(2, 10);
+document.getElementById('userId').textContent = userId;
 
-async function getDeviceId() {
-    const data = [
-        navigator.userAgent,
-        navigator.platform,
-        navigator.language,
-        screen.width + 'x' + screen.height,
-        Intl.DateTimeFormat().resolvedOptions().timeZone
-    ].join('|');
+let userName = '';
+let friends = [];
+let peer = null;
+let conn = null;
 
-    const encoder = new TextEncoder();
-    const dataBuffer = encoder.encode(data);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", dataBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+// Update username
+document.getElementById('userName').addEventListener('change', (e) => {
+    userName = e.target.value || 'Anonymous';
+});
+
+// Simulate online users (since no backend, we'll fake it locally)
+function updateFriendsList() {
+    const friendsList = document.getElementById('friendsList');
+    friendsList.innerHTML = '';
+    friends.forEach(friend => {
+        const li = document.createElement('li');
+        li.textContent = `${friend.name} (${friend.id})`;
+        li.onclick = () => startChat(friend.id);
+        friendsList.appendChild(li);
+    });
 }
 
-window.onload = async () => {
-    const deviceId = await getDeviceId();
-    if (!allowedDevices.includes(deviceId)) {
-        alert("Access Denied: This device is not registered.");
-        document.body.innerHTML = "<h2 style='color:red; text-align:center;'>❌ Access Blocked</h2>";
-    } else {
-        console.log("✅ Device Verified");
-        initializeApp();
+// Add a fake friend for demo (in real scenario, this would come from peers)
+setInterval(() => {
+    if (userName) {
+        friends = [{ id: 'fake123', name: 'FakeUser' }, { id: userId, name: userName }];
+        updateFriendsList();
     }
-};
+}, 2000);
 
-function initializeApp() {
-    let player;
-    const ytPlayer = document.getElementById('ytPlayer');
-    const urlParams = new URLSearchParams(window.location.search);
-    const groupId = urlParams.get('group') || Math.random().toString(36).substr(2, 8);
-    const videoId = urlParams.get('v');
-    const channel = new BroadcastChannel(`watch-together-${groupId}`);
+// WebRTC for peer-to-peer chat
+function startChat(friendId) {
+    peer = new RTCPeerConnection();
+    conn = peer.createDataChannel('chat');
 
-    if (!urlParams.get('group')) {
-        const newUrl = `${window.location.pathname}?group=${groupId}`;
-        history.replaceState({}, '', newUrl);
-    }
+    conn.onopen = () => console.log('Connection opened');
+    conn.onmessage = (event) => {
+        const messages = document.getElementById('messages');
+        messages.innerHTML += `<p>${friendId}: ${event.data}</p>`;
+        messages.scrollTop = messages.scrollHeight;
+    };
 
-    window.onYouTubeIframeAPIReady = function () {
-        if (videoId) {
-            ytPlayer.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
-        }
-    }
-
-    function loadVideo() {
-        const input = document.getElementById('youtubeLink').value.trim();
-        let vid = "";
-        if (input.includes("youtu.be/")) {
-            vid = input.split("youtu.be/")[1].split("?")[0];
-        } else if (input.includes("v=")) {
-            vid = input.split("v=")[1].split("&")[0];
-        }
-
-        if (vid) {
-            const newUrl = `${window.location.pathname}?group=${groupId}&v=${vid}`;
-            history.replaceState({}, '', newUrl);
-            ytPlayer.src = `https://www.youtube.com/embed/${vid}?enablejsapi=1`;
-
-            const shareLink = `${window.location.origin}${window.location.pathname}?group=${groupId}&v=${vid}`;
-            document.getElementById('shareLink').value = shareLink;
-            document.getElementById('shareSection').style.display = 'block';
-
-            channel.postMessage({ type: 'load', videoId: vid });
-        }
-    }
-
-    function sendControl(action) {
-        channel.postMessage({ type: 'control', action: action });
-        controlVideo(action);
-    }
-
-    function controlVideo(action) {
-        ytPlayer.contentWindow.postMessage(JSON.stringify({
-            event: "command",
-            func: action + "Video",
-            args: []
-        }), "*");
-    }
-
-    function sendMessage() {
-        const msg = document.getElementById('chatMsg').value;
-        if (msg.trim() === '') return;
-        channel.postMessage({ type: 'chat', msg });
-        appendMessage("You: " + msg);
-        document.getElementById('chatMsg').value = '';
-    }
-
-    function appendMessage(msg) {
-        const messagesDiv = document.getElementById('messages');
-        messagesDiv.innerHTML += `<div>${msg}</div>`;
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
-
-    channel.onmessage = (event) => {
-        const data = event.data;
-        if (data.type === 'load') {
-            ytPlayer.src = `https://www.youtube.com/embed/${data.videoId}?enablejsapi=1`;
-        }
-
-        if (data.type === 'control') {
-            controlVideo(data.action);
-        }
-
-        if (data.type === 'chat') {
-            appendMessage("Friend: " + data.msg);
+    peer.onicecandidate = (event) => {
+        if (event.candidate) {
+            // Normally, you'd send this to the friend via a signaling server
+            console.log('ICE Candidate:', event.candidate);
         }
     };
 
-    // Bind functions to window for button onclicks
-    window.loadVideo = loadVideo;
-    window.sendControl = sendControl;
-    window.sendMessage = sendMessage;
+    peer.createOffer()
+        .then(offer => peer.setLocalDescription(offer))
+        .then(() => {
+            // Normally, send this offer to the friend (via signaling)
+            console.log('Offer created');
+        });
 }
-</script>
+
+// Send message
+function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const message = input.value;
+    if (conn && message) {
+        conn.send(message);
+        const messages = document.getElementById('messages');
+        messages.innerHTML += `<p>You: ${message}</p>`;
+        messages.scrollTop = messages.scrollHeight;
+        input.value = '';
+    }
+}
