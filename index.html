@@ -1,53 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <title>🎥 Watch Together</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temporary Chat</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
     <div class="container">
-
-
-       <div id="deviceInfo" style="position: fixed; top: 10px; right: 10px; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); font-family: Arial; z-index: 9999;">
-  📱 Device ID: <span id="deviceId" style="font-size: 12px; word-break: break-all;"></span><br>
-  <button onclick="copyDeviceId()" style="margin-top: 5px; font-size: 12px;">📋 Copy ID</button>
-</div>
-
-
-
-        
-        <h1>👫 Watch Together</h1>
-
-        <input type="text" id="youtubeLink" placeholder="Paste YouTube Link">
-        <button onclick="loadVideo()">Load & Share</button>
-
-        <div id="shareSection" style="margin-top: 10px; display:none;">
-            <p>🔗 Share this link with friend:</p>
-            <input type="text" id="shareLink" readonly>
+        <h1>Temporary Chat</h1>
+        <div id="userInfo">
+            <p>Your ID: <span id="userId"></span></p>
+            <p>Your Name: <input id="userName" placeholder="Enter your name"></p>
         </div>
-
-        <div id="playerContainer">
-            <iframe id="ytPlayer" src="" allow="autoplay" allowfullscreen></iframe>
+        <div id="friendsBox">
+            <h2>Online Users</h2>
+            <ul id="friendsList"></ul>
         </div>
-
-        <div class="controls">
-            <button onclick="sendControl('play')">▶️ Play</button>
-            <button onclick="sendControl('pause')">⏸ Pause</button>
-        </div>
-
-        <div id="chat">
-            <h3>💬 Chat Box</h3>
+        <div id="chatBox">
+            <h2>Chat</h2>
             <div id="messages"></div>
-            <input type="text" id="chatMsg" placeholder="Type message...">
+            <input id="messageInput" placeholder="Type a message">
             <button onclick="sendMessage()">Send</button>
         </div>
     </div>
-
-    <script src="https://www.youtube.com/iframe_api"></script>
     <script src="script.js"></script>
 </body>
-
 </html>
