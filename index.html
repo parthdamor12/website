@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebRTC Chat</title>
+    <title>Like Page</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>WebRTC Chat</h1>
-    <div>
-        <textarea id="messages" readonly></textarea><br>
-        <input type="text" id="messageInput" placeholder="Type your message">
-        <button onclick="sendMessage()">Send</button>
+    <div id="content">
+        <button onclick="showLike()">Open Like</button>
     </div>
-    <div>
-        <button onclick="startCall()">Start Call</button>
-        <button onclick="hangUp()">Hang Up</button>
+
+    <div id="likeSection" style="display: none;">
+        <button onclick="like()">Like</button>
+        <p id="likeMessage" style="display: none;">You liked this page!</p>
     </div>
 
     <script src="script.js"></script>
