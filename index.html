@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Group Chat</title>
+    <title>WebRTC Chat</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Group Chat</h1>
-        <div id="chatbox" class="chatbox"></div>
-        <div class="controls">
-            <input type="text" id="message" placeholder="Type a message...">
-            <button onclick="sendMessage()">Send</button>
-        </div>
-        <button onclick="clearChat()">Clear Chat</button>
+    <h1>WebRTC Chat</h1>
+    <div>
+        <textarea id="messages" readonly></textarea><br>
+        <input type="text" id="messageInput" placeholder="Type your message">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <div>
+        <button onclick="startCall()">Start Call</button>
+        <button onclick="hangUp()">Hang Up</button>
     </div>
 
     <script src="script.js"></script>
