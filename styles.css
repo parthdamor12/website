@@ -46,4 +46,22 @@ body {
     padding: 10px;
     margin-bottom: 10px;
   }
-  
+
+
+#deviceBox {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #ffffffcc;
+    padding: 10px;
+    border: 1px solid #aaa;
+    border-radius: 8px;
+    font-size: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
+}
+#deviceBox button {
+    font-size: 12px;
+    margin-top: 5px;
+    cursor: pointer;
+}
