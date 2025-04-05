@@ -1,73 +1,66 @@
-// Generate a temporary ID (random for simplicity, could use device info)
+// Generate a temporary ID
 const userId = Math.random().toString(36).substring(2, 10);
 document.getElementById('userId').textContent = userId;
 
 let userName = '';
-let friends = [];
-let peer = null;
-let conn = null;
+let selectedFriend = null;
+
+// Simulated friends list (since no backend)
+const fakeFriends = [
+    { id: 'friend1', name: 'Amit' },
+    { id: 'friend2', name: 'Priya' }
+];
 
 // Update username
 document.getElementById('userName').addEventListener('change', (e) => {
     userName = e.target.value || 'Anonymous';
+    updateFriendsList();
 });
 
-// Simulate online users (since no backend, we'll fake it locally)
+// Update friends list
 function updateFriendsList() {
     const friendsList = document.getElementById('friendsList');
     friendsList.innerHTML = '';
-    friends.forEach(friend => {
-        const li = document.createElement('li');
-        li.textContent = `${friend.name} (${friend.id})`;
-        li.onclick = () => startChat(friend.id);
-        friendsList.appendChild(li);
+    
+    // Add current user and fake friends
+    const allFriends = [{ id: userId, name: userName }, ...fakeFriends];
+    allFriends.forEach(friend => {
+        if (friend.name) { // Only show if name exists
+            const li = document.createElement('li');
+            li.textContent = `${friend.name} (${friend.id})`;
+            li.onclick = () => selectFriend(friend);
+            friendsList.appendChild(li);
+        }
     });
 }
 
-// Add a fake friend for demo (in real scenario, this would come from peers)
-setInterval(() => {
-    if (userName) {
-        friends = [{ id: 'fake123', name: 'FakeUser' }, { id: userId, name: userName }];
-        updateFriendsList();
-    }
-}, 2000);
-
-// WebRTC for peer-to-peer chat
-function startChat(friendId) {
-    peer = new RTCPeerConnection();
-    conn = peer.createDataChannel('chat');
-
-    conn.onopen = () => console.log('Connection opened');
-    conn.onmessage = (event) => {
-        const messages = document.getElementById('messages');
-        messages.innerHTML += `<p>${friendId}: ${event.data}</p>`;
-        messages.scrollTop = messages.scrollHeight;
-    };
-
-    peer.onicecandidate = (event) => {
-        if (event.candidate) {
-            // Normally, you'd send this to the friend via a signaling server
-            console.log('ICE Candidate:', event.candidate);
-        }
-    };
-
-    peer.createOffer()
-        .then(offer => peer.setLocalDescription(offer))
-        .then(() => {
-            // Normally, send this offer to the friend (via signaling)
-            console.log('Offer created');
-        });
+// Select a friend to "chat" with
+function selectFriend(friend) {
+    selectedFriend = friend;
+    document.getElementById('chatWith').textContent = friend.name;
+    document.getElementById('messages').innerHTML = ''; // Clear previous chat
 }
 
-// Send message
+// Send message (simulated)
 function sendMessage() {
     const input = document.getElementById('messageInput');
     const message = input.value;
-    if (conn && message) {
-        conn.send(message);
-        const messages = document.getElementById('messages');
+    const messages = document.getElementById('messages');
+    
+    if (message && selectedFriend) {
+        // Show your message
         messages.innerHTML += `<p>You: ${message}</p>`;
+        
+        // Simulate a reply from the selected friend after 1 second
+        setTimeout(() => {
+            messages.innerHTML += `<p>${selectedFriend.name}: Hi! You said: ${message}</p>`;
+            messages.scrollTop = messages.scrollHeight;
+        }, 1000);
+        
         messages.scrollTop = messages.scrollHeight;
         input.value = '';
     }
 }
+
+// Initial friends list update
+updateFriendsList();
