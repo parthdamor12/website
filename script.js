@@ -10,23 +10,19 @@ let userName = 'Unknown';
 let messages = sessionStorage.getItem('chatMessages') ? JSON.parse(sessionStorage.getItem('chatMessages')) : [];
 let peer = new Peer(userId, { host: 'peerjs-server.herokuapp.com', secure: true, port: 443 });
 let connections = {};
-let selectedFriendId = null;
-
-// Get friend ID from URL parameter
-const urlParams = new URLSearchParams(window.location.search);
-const friendIdFromUrl = urlParams.get('friend');
+let onlineUsers = [];
 
 // Update username
 document.getElementById('userName').addEventListener('change', (e) => {
     userName = e.target.value || 'Unknown';
+    broadcastPresence();
     updateShareLink();
-    renderMessages();
 });
 
 // Update share link
 function updateShareLink() {
     const shareLink = document.getElementById('shareLink');
-    const url = `${window.location.origin}${window.location.pathname}?friend=${userId}`;
+    const url = `${window.location.origin}${window.location.pathname}`;
     shareLink.href = url;
     shareLink.textContent = url;
     shareLink.onclick = () => navigator.clipboard.writeText(url);
@@ -36,23 +32,57 @@ function updateShareLink() {
 peer.on('open', () => {
     console.log('Peer ID:', userId);
     updateShareLink();
-    if (friendIdFromUrl && friendIdFromUrl !== userId) {
-        connectToFriend(friendIdFromUrl);
-    }
+    broadcastPresence();
+    setInterval(broadcastPresence, 5000); // Refresh presence every 5 seconds
 });
 
 // Handle incoming connections
 peer.on('connection', (conn) => {
     connections[conn.peer] = conn;
-    conn.on('open', () => {
-        selectedFriendId = conn.peer;
-        document.getElementById('chatWith').textContent = conn.metadata?.name || 'Friend';
-    });
     conn.on('data', (data) => {
-        messages.push({ sender: conn.metadata?.name || 'Friend', text: data });
-        renderMessages();
+        if (data.type === 'presence') {
+            updateOnlineUsers(conn.peer, data.name);
+        } else {
+            messages.push({ sender: data.name || 'Unknown', text: data.message });
+            renderMessages();
+        }
+    });
+    conn.on('close', () => {
+        delete connections[conn.peer];
+        onlineUsers = onlineUsers.filter(u => u.id !== conn.peer);
+        updateFriendsList();
     });
 });
+
+// Broadcast presence to all peers
+function broadcastPresence() {
+    Object.values(connections).forEach(conn => {
+        if (conn.open) {
+            conn.send({ type: 'presence', name: userName });
+        }
+    });
+}
+
+// Update online users list
+function updateOnlineUsers(peerId, name) {
+    if (!onlineUsers.find(u => u.id === peerId)) {
+        onlineUsers.push({ id: peerId, name });
+    } else {
+        onlineUsers = onlineUsers.map(u => u.id === peerId ? { id: peerId, name } : u);
+    }
+    updateFriendsList();
+}
+
+// Render online users
+function updateFriendsList() {
+    const friendsList = document.getElementById('friendsList');
+    friendsList.innerHTML = '';
+    onlineUsers.forEach(user => {
+        const li = document.createElement('li');
+        li.textContent = `${user.name} (${user.id})`;
+        friendsList.appendChild(li);
+    });
+}
 
 // Render messages
 function renderMessages() {
@@ -67,35 +97,54 @@ function renderMessages() {
 
 // Connect to another user
 function connectToFriend(friendId) {
-    if (!connections[friendId]) {
+    if (!connections[friendId] && friendId !== userId) {
         const conn = peer.connect(friendId, { metadata: { name: userName } });
         connections[friendId] = conn;
         conn.on('open', () => {
             console.log('Connected to', friendId);
-            selectedFriendId = friendId;
-            document.getElementById('chatWith').textContent = 'Friend';
+            conn.send({ type: 'presence', name: userName });
         });
         conn.on('data', (data) => {
-            messages.push({ sender: conn.metadata?.name || 'Friend', text: data });
-            renderMessages();
+            if (data.type === 'presence') {
+                updateOnlineUsers(friendId, data.name);
+            } else {
+                messages.push({ sender: data.name || 'Unknown', text: data.message });
+                renderMessages();
+            }
+        });
+        conn.on('close', () => {
+            delete connections[friendId];
+            onlineUsers = onlineUsers.filter(u => u.id !== friendId);
+            updateFriendsList();
         });
     }
 }
 
-// Send message
+// Send message to all connected peers
 function sendMessage() {
     const input = document.getElementById('messageInput');
     const message = input.value;
     
-    if (message && selectedFriendId && connections[selectedFriendId]) {
-        connections[selectedFriendId].send(message);
+    if (message) {
+        const data = { name: userName, message };
+        Object.values(connections).forEach(conn => {
+            if (conn.open) {
+                conn.send(data);
+            }
+        });
         messages.push({ sender: userName, text: message });
         renderMessages();
         input.value = '';
-    } else if (message && !selectedFriendId) {
-        alert('Share your link with a friend to start chatting!');
     }
 }
 
 // Initial render
 renderMessages();
+
+// Prompt to connect to at least one user initially
+setTimeout(() => {
+    const friendId = prompt('Enter a friend’s ID to join the chat (or share your link):');
+    if (friendId && friendId !== userId) {
+        connectToFriend(friendId);
+    }
+}, 1000);
