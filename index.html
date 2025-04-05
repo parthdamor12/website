@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>🎥 Watch Together</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>👫 Watch Together</h1>
+
+        <input type="text" id="youtubeLink" placeholder="Paste YouTube Link">
+        <button onclick="loadVideo()">Load & Share</button>
+
+        <div id="shareSection" style="margin-top: 10px; display:none;">
+            <p>🔗 Share this link with friend:</p>
+            <input type="text" id="shareLink" readonly>
+        </div>
+
+        <div id="playerContainer">
+            <iframe id="ytPlayer" src="" allow="autoplay" allowfullscreen></iframe>
+        </div>
+
+        <div class="controls">
+            <button onclick="sendControl('play')">▶️ Play</button>
+            <button onclick="sendControl('pause')">⏸ Pause</button>
+        </div>
+
+        <div id="chat">
+            <h3>💬 Chat Box</h3>
+            <div id="messages"></div>
+            <input type="text" id="chatMsg" placeholder="Type message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
