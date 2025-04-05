@@ -2,6 +2,7 @@
 const videoAccess = {
   "WkJhbGctMlF==": "dQw4w9WgXcQ",      // Your Device
   "dXNlci1pZC0xMjM=": "JGwWNGJdvx8"    // Friend's Device
+  "TW96aWxsYS81": "dQw4w9WgXcQ", // Add your own video ID here
 };
 
 // ✅ Generate Device ID
