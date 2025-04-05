@@ -11,34 +11,47 @@ let messages = sessionStorage.getItem('chatMessages') ? JSON.parse(sessionStorag
 let peer = new Peer(userId, { host: 'peerjs-server.herokuapp.com', secure: true, port: 443 });
 let connections = {};
 let selectedFriendId = null;
-let onlineUsers = [];
+
+// Get friend ID from URL parameter
+const urlParams = new URLSearchParams(window.location.search);
+const friendIdFromUrl = urlParams.get('friend');
 
 // Update username
 document.getElementById('userName').addEventListener('change', (e) => {
     userName = e.target.value || 'Unknown';
-    broadcastPresence(); // Announce name change
+    updateShareLink();
+    renderMessages();
 });
+
+// Update share link
+function updateShareLink() {
+    const shareLink = document.getElementById('shareLink');
+    const url = `${window.location.origin}${window.location.pathname}?friend=${userId}`;
+    shareLink.href = url;
+    shareLink.textContent = url;
+    shareLink.onclick = () => navigator.clipboard.writeText(url);
+}
 
 // When peer is ready
 peer.on('open', () => {
     console.log('Peer ID:', userId);
-    broadcastPresence(); // Announce yourself to others
+    updateShareLink();
+    if (friendIdFromUrl && friendIdFromUrl !== userId) {
+        connectToFriend(friendIdFromUrl);
+    }
 });
 
 // Handle incoming connections
 peer.on('connection', (conn) => {
     connections[conn.peer] = conn;
-    conn.on('data', (data) => {
-        if (data.type === 'presence') {
-            onlineUsers = onlineUsers.filter(u => u.id !== conn.peer);
-            onlineUsers.push({ id: conn.peer, name: data.name });
-            updateFriendsList();
-        } else {
-            messages.push({ sender: conn.metadata.name || 'Unknown', text: data });
-            renderMessages();
-        }
+    conn.on('open', () => {
+        selectedFriendId = conn.peer;
+        document.getElementById('chatWith').textContent = conn.metadata?.name || 'Friend';
     });
-    updateFriendsList();
+    conn.on('data', (data) => {
+        messages.push({ sender: conn.metadata?.name || 'Friend', text: data });
+        renderMessages();
+    });
 });
 
 // Render messages
@@ -52,28 +65,6 @@ function renderMessages() {
     sessionStorage.setItem('chatMessages', JSON.stringify(messages));
 }
 
-// Update friends list
-function updateFriendsList() {
-    const friendsList = document.getElementById('friendsList');
-    friendsList.innerHTML = '';
-    onlineUsers.forEach(user => {
-        const li = document.createElement('li');
-        li.textContent = `${user.name} (${user.id})`;
-        li.onclick = () => selectFriend(user.id);
-        friendsList.appendChild(li);
-    });
-}
-
-// Select a friend to chat with
-function selectFriend(friendId) {
-    selectedFriendId = friendId;
-    document.getElementById('chatWith').textContent = onlineUsers.find(u => u.id === friendId)?.name || 'Unknown';
-    if (!connections[friendId]) {
-        connectToFriend(friendId);
-    }
-    renderMessages();
-}
-
 // Connect to another user
 function connectToFriend(friendId) {
     if (!connections[friendId]) {
@@ -81,29 +72,14 @@ function connectToFriend(friendId) {
         connections[friendId] = conn;
         conn.on('open', () => {
             console.log('Connected to', friendId);
-            conn.send({ type: 'presence', name: userName }); // Send presence info
-            updateFriendsList();
+            selectedFriendId = friendId;
+            document.getElementById('chatWith').textContent = 'Friend';
         });
         conn.on('data', (data) => {
-            if (data.type === 'presence') {
-                onlineUsers = onlineUsers.filter(u => u.id !== friendId);
-                onlineUsers.push({ id: friendId, name: data.name });
-                updateFriendsList();
-            } else {
-                messages.push({ sender: conn.metadata.name || 'Unknown', text: data });
-                renderMessages();
-            }
+            messages.push({ sender: conn.metadata?.name || 'Friend', text: data });
+            renderMessages();
         });
     }
-}
-
-// Broadcast presence to all known peers
-function broadcastPresence() {
-    Object.values(connections).forEach(conn => {
-        if (conn.open) {
-            conn.send({ type: 'presence', name: userName });
-        }
-    });
 }
 
 // Send message
@@ -116,16 +92,10 @@ function sendMessage() {
         messages.push({ sender: userName, text: message });
         renderMessages();
         input.value = '';
+    } else if (message && !selectedFriendId) {
+        alert('Share your link with a friend to start chatting!');
     }
 }
 
 // Initial render
 renderMessages();
-
-// Simulate initial connection (you’d normally share IDs manually)
-setTimeout(() => {
-    const friendId = prompt('Enter a friend’s ID to start (or leave blank to wait):');
-    if (friendId && friendId !== userId) {
-        connectToFriend(friendId);
-    }
-}, 1000);
