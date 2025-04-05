@@ -10,12 +10,26 @@ body {
     margin: auto;
 }
 
-#userInfo, #chatBox {
+#userInfo, #friendsBox, #chatBox {
     background: white;
     padding: 15px;
     margin-bottom: 20px;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+#friendsList {
+    list-style: none;
+    padding: 0;
+}
+
+#friendsList li {
+    padding: 5px;
+    cursor: pointer;
+}
+
+#friendsList li:hover {
+    background: #ddd;
 }
 
 #messages {
