@@ -7,24 +7,22 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="device-id-box">
-    Device ID: <span id="device-id"></span>
+  <div class="top-bar">
+    <span>Device ID: <span id="device-id">Loading...</span></span>
     <button onclick="copyDeviceId()">Copy</button>
   </div>
 
-  <div class="container">
-    <h1>Watch Together</h1>
+  <div class="search-box">
+    <input type="text" id="search-device-id" placeholder="Enter friend’s Device ID" />
+    <button onclick="searchDeviceAndLoad()">Search & Play</button>
+  </div>
 
-    <input type="text" id="youtube-url" placeholder="Enter YouTube Video URL" />
-    <button onclick="loadVideo()">Load Video</button>
+  <div id="video-container" class="video-box"></div>
 
-    <div class="video-container" id="video-container"></div>
-
-    <div class="chat-box">
-      <div id="messages"></div>
-      <input type="text" id="chat-input" placeholder="Type message..." />
-      <button onclick="sendMessage()">Send</button>
-    </div>
+  <div class="chat-box">
+    <div id="messages" class="messages"></div>
+    <input type="text" id="chat-input" placeholder="Type a message..." />
+    <button onclick="sendMessage()">Send</button>
   </div>
 
   <script src="script.js"></script>
